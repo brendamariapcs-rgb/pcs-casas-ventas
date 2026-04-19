@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PCS Casas — Ventas</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #F5F5F5; color: #212121; }
+.header { background: #2E7D52; color: #fff; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; }
+.header h1 { font-size: 17px; font-weight: 500; }
+.header-right { display: flex; align-items: center; gap: 12px; }
+.sync-status { font-size: 11px; opacity: 0.85; }
+.sync-dot { width: 7px; height: 7px; border-radius: 50%; background: #69F0AE; display: inline-block; margin-right: 4px; }
+.sync-dot.offline { background: #FF7043; }
+.tabs { background: #fff; border-bottom: 0.5px solid #E0E0E0; display: flex; padding: 0 16px; overflow-x: auto; }
+.tab { padding: 12px 16px; font-size: 13px; cursor: pointer; border-bottom: 2px solid transparent; color: #757575; white-space: nowrap; }
+.tab.active { border-bottom-color: #2E7D52; color: #2E7D52; font-weight: 500; }
+.content { padding: 20px 24px; max-width: 960px; margin: 0 auto; }
+.section { display: none; }
+.section.active { display: block; }
+.card { background: #fff; border-radius: 10px; border: 0.5px solid #E0E0E0; padding: 20px; margin-bottom: 16px; }
+.card h3 { font-size: 14px; font-weight: 500; margin-bottom: 16px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field label { font-size: 11px; color: #757575; text-transform: uppercase; letter-spacing: 0.5px; }
+.field input, .field select, .field textarea { font-size: 13px; padding: 8px 10px; border-radius: 8px; border: 0.5px solid #BDBDBD; background: #FAFAFA; color: #212121; outline: none; }
+.field input:focus, .field select:focus, .field textarea:focus { border-color: #2E7D52; background: #fff; }
+.field textarea { resize: vertical; min-height: 56px; }
+.btn { background: #2E7D52; color: #fff; border: none; border-radius: 8px; padding: 11px 24px; font-size: 13px; font-weight: 500; cursor: pointer; width: 100%; margin-top: 4px; }
+.btn:hover { background: #1B5E20; }
+.btn:disabled { background: #9E9E9E; cursor: not-allowed; }
+.btn-danger { background: #C62828; color: #fff; border: none; border-radius: 6px; padding: 5px 10px; font-size: 11px; cursor: pointer; }
+.btn-reagenda { background: #1565C0; color: #fff; border: none; border-radius: 6px; padding: 5px 10px; font-size: 11px; cursor: pointer; }
+.btn-outline { background: transparent; color: #2E7D52; border: 0.5px solid #2E7D52; border-radius: 8px; padding: 7px 14px; font-size: 12px; cursor: pointer; }
+.metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 14px; }
+.metric { background: #fff; border-radius: 8px; padding: 14px; border: 0.5px solid #E0E0E0; }
+.metric-label { font-size: 11px; color: #757575; margin-bottom: 4px; }
+.metric-value { font-size: 19px; font-weight: 500; }
+.green { color: #2E7D52; } .amber { color: #E65100; } .red { color: #C62828; } .blue { color: #1565C0; }
+.vcard { background: #fff; border: 0.5px solid #E0E0E0; border-radius: 10px; padding: 16px; margin-bottom: 10px; }
+.vcard-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.avatar { width: 38px; height: 38px; border-radius: 50%; background: #E8F5E9; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 500; color: #2E7D52; flex-shrink: 0; }
+.avatar.ia { background: #E3F2FD; color: #1565C0; }
+.vname { font-size: 15px; font-weight: 500; }
+.vsub { font-size: 12px; color: #757575; margin-top: 2px; }
+.bar-wrap { background: #F5F5F5; border-radius: 20px; height: 6px; margin: 8px 0 6px; }
+.bar-fill { height: 6px; border-radius: 20px; background: #2E7D52; }
+.bar-fill.ia { background: #1565C0; }
+.stats-row { display: flex; gap: 20px; flex-wrap: wrap; }
+.stat { font-size: 12px; color: #757575; }
+.stat strong { color: #212121; font-weight: 500; }
+.row { background: #fff; border: 0.5px solid #E0E0E0; border-radius: 8px; padding: 11px 14px; display: grid; grid-template-columns: 0.65fr 0.9fr 1.5fr 0.8fr 0.65fr 0.9fr; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 12px; }
+.row.cancelada { background: #FFF8F8; border-color: #FFCDD2; }
+.row.reagendada { background: #F3F8FF; border-color: #BBDEFB; }
+.col-hdr { font-size: 11px; color: #757575; text-transform: uppercase; letter-spacing: 0.4px; }
+.chat-wrap { display: flex; flex-direction: column; gap: 10px; min-height: 180px; margin-bottom: 12px; }
+.msg { padding: 10px 14px; border-radius: 10px; font-size: 13px; line-height: 1.6; max-width: 88%; }
+.msg-user { background: #2E7D52; color: #fff; align-self: flex-end; border-bottom-right-radius: 3px; }
+.msg-bot { background: #F5F5F5; color: #212121; align-self: flex-start; border-bottom-left-radius: 3px; border: 0.5px solid #E0E0E0; }
+.chat-input-row { display: flex; gap: 8px; }
+.chat-input-row input { flex: 1; font-size: 13px; padding: 9px 12px; border-radius: 8px; border: 0.5px solid #BDBDBD; background: #FAFAFA; color: #212121; outline: none; }
+.chat-input-row input:focus { border-color: #2E7D52; }
+.btn-send { background: #2E7D52; color: #fff; border: none; border-radius: 8px; padding: 9px 16px; font-size: 13px; cursor: pointer; }
+.quick-btns { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.qbtn { font-size: 12px; padding: 5px 12px; border-radius: 20px; border: 0.5px solid #BDBDBD; background: #fff; color: #757575; cursor: pointer; }
+.qbtn:hover { border-color: #2E7D52; color: #2E7D52; }
+.success-msg { background: #E8F5E9; border: 0.5px solid #81C784; border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #1B5E20; margin-top: 10px; display: none; }
+.error-msg { background: #FFEBEE; border: 0.5px solid #EF9A9A; border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #B71C1C; margin-top: 10px; display: none; }
+.empty { text-align: center; padding: 32px; font-size: 13px; color: #9E9E9E; }
+.loading { text-align: center; padding: 32px; font-size: 13px; color: #9E9E9E; }
+.typing { display: flex; gap: 4px; align-items: center; padding: 10px 14px; background: #F5F5F5; border-radius: 10px; align-self: flex-start; border: 0.5px solid #E0E0E0; }
+.dot { width: 6px; height: 6px; border-radius: 50%; background: #9E9E9E; animation: b 1.2s infinite; }
+.dot:nth-child(2){animation-delay:.2s} .dot:nth-child(3){animation-delay:.4s}
+@keyframes b{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+.badge { display: inline-block; font-size: 11px; padding: 2px 7px; border-radius: 20px; font-weight: 500; }
+.bg-green { background:#E8F5E9;color:#1B5E20; }
+.bg-red { background:#FFEBEE;color:#B71C1C; }
+.bg-blue { background:#E3F2FD;color:#0D47A1; }
+.export-bar { display: flex; gap: 10px; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.sec-title { font-size: 13px; font-weight: 500; color: #424242; margin: 18px 0 10px; }
+.overlay { display: none; position: fixed; top:0;left:0;width:100%;height:100%; background:rgba(0,0,0,0.4); z-index:200; align-items:center; justify-content:center; }
+.overlay.open { display: flex; }
+.modal { background:#fff; border-radius:12px; padding:24px; width:420px; max-width:92vw; }
+.modal h3 { font-size:15px;font-weight:500;margin-bottom:8px; }
+.modal p { font-size:13px;color:#757575;margin-bottom:16px; }
+.modal-btns { display:flex;gap:10px;margin-top:16px; }
+.modal-btns button { flex:1;padding:10px;border-radius:8px;font-size:13px;cursor:pointer;border:0.5px solid #BDBDBD;background:#fff;color:#212121; }
+.modal-btns .ok-red { background:#C62828;color:#fff;border-color:#C62828; }
+.modal-btns .ok-blue { background:#1565C0;color:#fff;border-color:#1565C0; }
+.spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.6s linear infinite; vertical-align: middle; margin-right: 6px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media(max-width:600px){.grid2,.grid3{grid-template-columns:1fr}.metrics{grid-template-columns:1fr 1fr}.row{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>PCS Casas — Ventas</h1>
+  <div class="header-right">
+    <span class="sync-status"><span class="sync-dot" id="sync-dot"></span><span id="sync-txt">Conectando...</span></span>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab('registro',this)">Registrar</div>
+  <div class="tab" onclick="showTab('dashboard',this)">Dashboard</div>
+  <div class="tab" onclick="showTab('historial',this)">Historial</div>
+  <div class="tab" onclick="showTab('cancelaciones',this)">Cancelaciones <span id="badge-c" style="background:#C62828;color:#fff;border-radius:20px;padding:1px 6px;font-size:10px;margin-left:3px;display:none;"></span></div>
+  <div class="tab" onclick="showTab('consulta',this)">Consultar</div>
+</div>
+
+<div class="content">
+
+  <div id="registro" class="section active">
+    <div class="card">
+      <h3>Nueva venta cerrada al 100%</h3>
+      <div class="grid2">
+        <div class="field"><label>Fecha de venta</label><input type="date" id="f-fecha"></div>
+        <div class="field"><label>Vendedor</label>
+          <select id="f-vendedor">
+            <option value="">Seleccionar...</option>
+            <option>Brenda</option>
+            <option>Vendedor 2</option>
+            <option>Vendedor 3</option>
+            <option>Venta IA / Automatización</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Nombre del cliente</label><input type="text" id="f-cliente" placeholder="Ej. María González"></div>
+        <div class="field"><label>Teléfono</label><input type="text" id="f-tel" placeholder="Ej. 477 123 4567"></div>
+      </div>
+      <div class="grid3">
+        <div class="field"><label>Servicio vendido</label>
+          <select id="f-servicio">
+            <option value="">Seleccionar...</option>
+            <option>Chinches (3 aplic.)</option>
+            <option>Cucarachas (2 aplic.)</option>
+            <option>Termitas (3 aplic.)</option>
+            <option>Roedores (2 aplic.)</option>
+            <option>Control general</option>
+          </select>
+        </div>
+        <div class="field"><label>Ciudad</label><input type="text" id="f-ciudad" placeholder="Ej. León, Gto."></div>
+        <div class="field"><label>Origen del lead</label>
+          <select id="f-origen">
+            <option value="">Seleccionar...</option>
+            <option>Meta Ads</option>
+            <option>Cliente conocido</option>
+            <option>Referido</option>
+            <option>TikTok</option>
+            <option>Otros</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Precio final ($)</label><input type="number" id="f-precio" placeholder="Ej. 3500"></div>
+        <div class="field"><label>Método de pago</label>
+          <select id="f-pago">
+            <option value="">Seleccionar...</option>
+            <option>Efectivo</option>
+            <option>Transferencia</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <button class="btn" id="btn-registrar" onclick="registrar()">Registrar venta cerrada</button>
+    <div class="success-msg" id="success-msg">Venta guardada correctamente en Google Sheets.</div>
+    <div class="error-msg" id="error-msg">Error al guardar. Verifica tu conexión e intenta de nuevo.</div>
+  </div>
+
+  <div id="dashboard" class="section">
+    <div class="metrics" id="m1"></div>
+    <div class="metrics" id="m2"></div>
+    <div class="sec-title">Rendimiento por vendedor — mes actual</div>
+    <div id="vdcards"></div>
+  </div>
+
+  <div id="historial" class="section">
+    <div class="export-bar">
+      <span style="font-size:12px;color:#9E9E9E;" id="last-sync-txt"></span>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-outline" onclick="loadData()">Actualizar</button>
+        <button class="btn-outline" onclick="exportCSV()">Exportar CSV</button>
+      </div>
+    </div>
+    <div class="row" style="background:#F5F5F5;">
+      <span class="col-hdr">Fecha</span><span class="col-hdr">Vendedor</span>
+      <span class="col-hdr">Cliente / Servicio</span><span class="col-hdr">Precio</span>
+      <span class="col-hdr">Estatus</span><span class="col-hdr">Acción</span>
+    </div>
+    <div id="historial-list"><div class="loading">Cargando datos...</div></div>
+  </div>
+
+  <div id="cancelaciones" class="section">
+    <div class="metrics" id="m-cancel"></div>
+    <div class="sec-title">Detalle de cancelaciones — mes actual</div>
+    <div id="cancel-list"></div>
+  </div>
+
+  <div id="consulta" class="section">
+    <div class="quick-btns">
+      <button class="qbtn" onclick="preg('¿Cuánto vendimos hoy?')">Ventas hoy</button>
+      <button class="qbtn" onclick="preg('¿Cuánto llevamos este mes neto?')">Este mes</button>
+      <button class="qbtn" onclick="preg('¿Cuánto vendió cada vendedor este mes?')">Por vendedor</button>
+      <button class="qbtn" onclick="preg('¿Cuántas ventas hizo la IA este mes y cuánto representa?')">Ventas IA</button>
+      <button class="qbtn" onclick="preg('¿Cuál es la tasa de cancelación y de reagenda este mes?')">Tasas del mes</button>
+      <button class="qbtn" onclick="preg('¿Cuántos clientes cancelaron y cuántos reagendaron?')">Cancelaciones</button>
+    </div>
+    <div class="card">
+      <div class="chat-wrap" id="chat"></div>
+      <div class="chat-input-row">
+        <input type="text" id="chat-input" placeholder="Pregunta lo que quieras sobre tus ventas..." onkeydown="if(event.key==='Enter')enviar()">
+        <button class="btn-send" onclick="enviar()">Enviar</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="overlay" id="ov-cancel">
+  <div class="modal">
+    <h3>Cancelar venta</h3>
+    <p>Esta venta se restará del total vendido. Podrás reagendarla desde Cancelaciones.</p>
+    <div class="field" style="margin-bottom:4px;"><label>Motivo (opcional)</label><textarea id="cancel-motivo" placeholder="Ej. Cliente no contestó, pidió cambio de fecha..."></textarea></div>
+    <div class="modal-btns">
+      <button onclick="closeOv('ov-cancel')">Cerrar</button>
+      <button class="ok-red" id="btn-cancel-ok" onclick="doCancel()">Confirmar cancelación</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="ov-reagenda">
+  <div class="modal">
+    <h3>Registrar reagenda</h3>
+    <p>El cliente quiere reagendar. Escribe la nota para rastrear esta reagenda.</p>
+    <div class="field" style="margin-bottom:12px;"><label>Nota de reagenda</label><textarea id="reagenda-nota" placeholder="Ej. Reagenda de 1ra aplicación — nueva fecha 28 de abril"></textarea></div>
+    <div class="field" style="margin-bottom:4px;"><label>Nueva fecha de servicio</label><input type="date" id="reagenda-fecha"></div>
+    <div class="modal-btns">
+      <button onclick="closeOv('ov-reagenda')">Cerrar</button>
+      <button class="ok-blue" id="btn-reagenda-ok" onclick="doReagenda()">Confirmar reagenda</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'https://script.google.com/macros/s/AKfycbz9dVyGCtDhKUH8aK74u8n8sbIhenUk7fsmsOAJ6ZS-iDKFfRe9kOCuPCVPFL9-s1UA/exec';
+let data = [];
+let selId = null;
+const today = new Date();
+const todayStr = today.toISOString().split('T')[0];
+const mes = todayStr.slice(0,7);
+
+document.getElementById('f-fecha').value = todayStr;
+document.getElementById('reagenda-fecha').value = todayStr;
+
+function fmt(n){ return '$'+Math.round(n).toLocaleString('es-MX'); }
+function pct(a,b){ return b>0?Math.round((a/b)*100)+'%':'0%'; }
+
+function setSyncStatus(online, txt){
+  document.getElementById('sync-dot').className = 'sync-dot' + (online?'':' offline');
+  document.getElementById('sync-txt').textContent = txt;
+}
+
+async function loadData(){
+  setSyncStatus(true,'Sincronizando...');
+  try {
+    const res = await fetch(API + '?t=' + Date.now());
+    const json = await res.json();
+    if(json.ok){
+      data = (json.data||[]).map(r => ({
+        id: String(r.id||r.Id||''),
+        fecha: String(r.fecha||r.Fecha||''),
+        vendedor: String(r.vendedor||r.Vendedor||''),
+        cliente: String(r.cliente||r.Cliente||''),
+        tel: String(r.tel||r.Tel||''),
+        servicio: String(r.servicio||r.Servicio||''),
+        ciudad: String(r.ciudad||r.Ciudad||''),
+        origen: String(r.origen||r.Origen||''),
+        precio: parseFloat(r.precio||r.Precio||0),
+        pago: String(r.pago||r.Pago||''),
+        estatus: String(r.estatus||r.Estatus||'activa'),
+        esIA: String(r.esIA||r.EsIA||'').toUpperCase()==='SI',
+        cancelMotivo: String(r.cancelMotivo||r.CancelMotivo||''),
+        reagendaNota: String(r.reagendaNota||r.ReagendaNota||''),
+        reagendaFecha: String(r.reagendaFecha||r.ReagendaFecha||'')
+      }));
+      data.sort((a,b)=>b.id.localeCompare(a.id));
+      setSyncStatus(true,'Sincronizado');
+      const now = new Date();
+      document.getElementById('last-sync-txt').textContent = 'Última actualización: '+now.toLocaleTimeString('es-MX');
+      updateBadge();
+    } else {
+      setSyncStatus(false,'Error de conexión');
+    }
+  } catch(e){
+    setSyncStatus(false,'Sin conexión');
+  }
+}
+
+async function postData(payload){
+  const res = await fetch(API, {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+  return await res.json();
+}
+
+function showTab(tab, el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById(tab).classList.add('active');
+  el.classList.add('active');
+  if(tab==='dashboard') renderDash();
+  if(tab==='historial'){ loadData().then(renderHistorial); }
+  if(tab==='cancelaciones'){ loadData().then(renderCancel); }
+}
+
+function updateBadge(){
+  const n = data.filter(v=>v.estatus==='cancelada'&&v.fecha.startsWith(mes)).length;
+  const b = document.getElementById('badge-c');
+  b.textContent=n; b.style.display=n>0?'inline':'none';
+}
+
+async function registrar(){
+  const vend = document.getElementById('f-vendedor').value;
+  const cli = document.getElementById('f-cliente').value.trim();
+  const precio = parseFloat(document.getElementById('f-precio').value);
+  if(!vend||!cli||!precio){ alert('Completa: vendedor, cliente y precio'); return; }
+
+  const btn = document.getElementById('btn-registrar');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Guardando...';
+
+  const venta = {
+    action: 'add',
+    id: Date.now().toString(),
+    fecha: document.getElementById('f-fecha').value,
+    vendedor: vend,
+    cliente: cli,
+    tel: document.getElementById('f-tel').value,
+    servicio: document.getElementById('f-servicio').value,
+    ciudad: document.getElementById('f-ciudad').value,
+    origen: document.getElementById('f-origen').value,
+    precio,
+    pago: document.getElementById('f-pago').value,
+    estatus: 'activa',
+    esIA: vend === 'Venta IA / Automatización',
+    cancelMotivo: '',
+    reagendaNota: '',
+    reagendaFecha: ''
+  };
+
+  try {
+    const res = await postData(venta);
+    btn.disabled = false;
+    btn.innerHTML = 'Registrar venta cerrada';
+    if(res.ok){
+      document.getElementById('success-msg').style.display='block';
+      document.getElementById('error-msg').style.display='none';
+      setTimeout(()=>document.getElementById('success-msg').style.display='none',4000);
+      data.unshift({...venta});
+      updateBadge();
+      ['f-cliente','f-tel','f-ciudad','f-precio'].forEach(i=>document.getElementById(i).value='');
+      ['f-vendedor','f-servicio','f-origen','f-pago'].forEach(i=>document.getElementById(i).value='');
+      document.getElementById('f-fecha').value=todayStr;
+    } else {
+      document.getElementById('error-msg').style.display='block';
+    }
+  } catch(e){
+    btn.disabled=false; btn.innerHTML='Registrar venta cerrada';
+    document.getElementById('error-msg').style.display='block';
+  }
+}
+
+function renderDash(){
+  const act = data.filter(v=>v.estatus==='activa');
+  const hoy = act.filter(v=>v.fecha===todayStr);
+  const mesAct = act.filter(v=>v.fecha.startsWith(mes));
+  const sem = act.filter(v=>{ const d=new Date(v.fecha+'T12:00:00'); const s=new Date(today); s.setDate(today.getDate()-today.getDay()); return d>=s; });
+  const mesTodo = data.filter(v=>v.fecha.startsWith(mes));
+  const cancelMes = mesTodo.filter(v=>v.estatus==='cancelada');
+  const reagMes = mesTodo.filter(v=>v.reagendaNota&&v.reagendaNota.trim()!==''&&v.reagendaNota!=='undefined');
+  const iaMes = mesAct.filter(v=>v.esIA);
+
+  document.getElementById('m1').innerHTML=`
+    <div class="metric"><div class="metric-label">Hoy</div><div class="metric-value green">${fmt(hoy.reduce((s,v)=>s+v.precio,0))}</div></div>
+    <div class="metric"><div class="metric-label">Esta semana</div><div class="metric-value green">${fmt(sem.reduce((s,v)=>s+v.precio,0))}</div></div>
+    <div class="metric"><div class="metric-label">Mes neto</div><div class="metric-value green">${fmt(mesAct.reduce((s,v)=>s+v.precio,0))}</div></div>
+    <div class="metric"><div class="metric-label">Cierres mes</div><div class="metric-value amber">${mesAct.length}</div></div>`;
+  document.getElementById('m2').innerHTML=`
+    <div class="metric"><div class="metric-label">Cancelaciones mes</div><div class="metric-value red">${cancelMes.length} <span style="font-size:12px;">(${pct(cancelMes.length,mesTodo.length)})</span></div></div>
+    <div class="metric"><div class="metric-label">Reagendas mes</div><div class="metric-value blue">${reagMes.length} <span style="font-size:12px;">(${pct(reagMes.length,cancelMes.length)} de cancel.)</span></div></div>
+    <div class="metric"><div class="metric-label">Ventas IA — cierres</div><div class="metric-value blue">${iaMes.length} <span style="font-size:12px;">(${pct(iaMes.length,mesAct.length)})</span></div></div>
+    <div class="metric"><div class="metric-label">Ventas IA — monto</div><div class="metric-value blue">${fmt(iaMes.reduce((s,v)=>s+v.precio,0))}</div></div>`;
+
+  const vds = [...new Set(act.map(v=>v.vendedor))];
+  const maxV = Math.max(...vds.map(vd=>act.filter(v=>v.vendedor===vd&&v.fecha.startsWith(mes)).reduce((s,v)=>s+v.precio,0)),1);
+  document.getElementById('vdcards').innerHTML = vds.length ? vds.map(vd=>{
+    const isIA = vd==='Venta IA / Automatización';
+    const ini = isIA?'IA':vd.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+    const vm = act.filter(v=>v.vendedor===vd&&v.fecha.startsWith(mes));
+    const vh = act.filter(v=>v.vendedor===vd&&v.fecha===todayStr);
+    const tot = vm.reduce((s,v)=>s+v.precio,0);
+    return`<div class="vcard">
+      <div class="vcard-header">
+        <div class="avatar${isIA?' ia':''}">${ini}</div>
+        <div><div class="vname">${vd}</div><div class="vsub">${vm.length} cierres este mes${isIA?' — Automatización':''}</div></div>
+        <div style="margin-left:auto;font-size:20px;font-weight:500;color:${isIA?'#1565C0':'#2E7D52'};">${fmt(tot)}</div>
+      </div>
+      <div class="bar-wrap"><div class="bar-fill${isIA?' ia':''}" style="width:${Math.round((tot/maxV)*100)}%"></div></div>
+      <div class="stats-row">
+        <div class="stat">Hoy: <strong>${fmt(vh.reduce((s,v)=>s+v.precio,0))}</strong></div>
+        <div class="stat">Ticket prom.: <strong>${vm.length?fmt(tot/vm.length):'$0'}</strong></div>
+        <div class="stat">Cierres hoy: <strong>${vh.length}</strong></div>
+      </div>
+    </div>`;
+  }).join('') : '<div class="empty">Registra tu primera venta para ver el dashboard.</div>';
+}
+
+function renderHistorial(){
+  document.getElementById('historial-list').innerHTML = data.length ? data.slice(0,80).map(v=>{
+    const cls = v.estatus==='cancelada'?' cancelada':v.estatus==='reagendada'?' reagendada':'';
+    const bdg = v.estatus==='cancelada'?`<span class="badge bg-red">Cancelada</span>`:v.estatus==='reagendada'?`<span class="badge bg-blue">Reagendada</span>`:v.esIA?`<span class="badge bg-blue">IA</span>`:`<span class="badge bg-green">Activa</span>`;
+    const acc = v.estatus==='activa'?`<button class="btn-danger" onclick="openCancel('${v.id}')">Cancelar</button>`:v.estatus==='cancelada'?`<button class="btn-reagenda" onclick="openReagenda('${v.id}')">Reagendar</button>`:'<span style="color:#9E9E9E;font-size:11px;">—</span>';
+    return`<div class="row${cls}">
+      <span>${v.fecha}</span>
+      <span style="font-size:11px;">${v.vendedor}</span>
+      <div>
+        <div style="font-weight:500;">${v.cliente}</div>
+        <div style="font-size:11px;color:#9E9E9E;">${v.servicio||'—'}</div>
+        ${v.reagendaNota&&v.reagendaNota!=='undefined'?`<div style="font-size:11px;color:#1565C0;margin-top:2px;">${v.reagendaNota}</div>`:''}
+        ${v.cancelMotivo&&v.cancelMotivo!=='undefined'?`<div style="font-size:11px;color:#C62828;margin-top:2px;">${v.cancelMotivo}</div>`:''}
+      </div>
+      <span style="font-weight:500;color:${v.estatus==='cancelada'?'#C62828':v.esIA?'#1565C0':'#2E7D52'};">${fmt(v.precio)}</span>
+      <span>${bdg}</span>
+      <span>${acc}</span>
+    </div>`;
+  }).join('') : '<div class="empty">Sin ventas registradas aún.</div>';
+}
+
+function renderCancel(){
+  const mesTodo = data.filter(v=>v.fecha.startsWith(mes));
+  const cancelMes = mesTodo.filter(v=>v.estatus==='cancelada');
+  const reagMes = mesTodo.filter(v=>v.reagendaNota&&v.reagendaNota.trim()!==''&&v.reagendaNota!=='undefined');
+  document.getElementById('m-cancel').innerHTML=`
+    <div class="metric"><div class="metric-label">Cancelaciones mes</div><div class="metric-value red">${cancelMes.length}</div></div>
+    <div class="metric"><div class="metric-label">Tasa cancelación</div><div class="metric-value red">${pct(cancelMes.length,mesTodo.length)}</div></div>
+    <div class="metric"><div class="metric-label">Reagendas mes</div><div class="metric-value blue">${reagMes.length}</div></div>
+    <div class="metric"><div class="metric-label">Tasa reagenda</div><div class="metric-value blue">${pct(reagMes.length,cancelMes.length)} de cancel.</div></div>`;
+  document.getElementById('cancel-list').innerHTML = cancelMes.length ? cancelMes.map(v=>{
+    const tieneR = v.reagendaNota&&v.reagendaNota.trim()!==''&&v.reagendaNota!=='undefined';
+    return`<div class="card" style="padding:14px 16px;margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+        <div>
+          <div style="font-size:13px;font-weight:500;">${v.cliente} <span style="font-weight:400;color:#757575;">— ${v.servicio||'—'}</span></div>
+          <div style="font-size:12px;color:#757575;margin-top:3px;">${v.fecha} · ${v.vendedor} · ${fmt(v.precio)}</div>
+          ${v.cancelMotivo&&v.cancelMotivo!=='undefined'?`<div style="font-size:12px;color:#C62828;margin-top:4px;">Motivo: ${v.cancelMotivo}</div>`:''}
+          ${tieneR?`<div style="font-size:12px;color:#1565C0;margin-top:4px;">Reagenda: ${v.reagendaNota}${v.reagendaFecha&&v.reagendaFecha!=='undefined'?' · '+v.reagendaFecha:''}</div>`:''}
+        </div>
+        ${tieneR?`<span class="badge bg-blue">Reagendada</span>`:`<button class="btn-reagenda" onclick="openReagenda('${v.id}')">Reagendar</button>`}
+      </div>
+    </div>`;
+  }).join('') : '<div class="empty">Sin cancelaciones este mes.</div>';
+  updateBadge();
+}
+
+function openCancel(id){ selId=id; document.getElementById('cancel-motivo').value=''; document.getElementById('ov-cancel').classList.add('open'); }
+async function doCancel(){
+  const motivo = document.getElementById('cancel-motivo').value.trim()||'Sin motivo';
+  const btn = document.getElementById('btn-cancel-ok');
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span>Guardando...';
+  try {
+    const res = await postData({ action:'update', id:selId, estatus:'cancelada', cancelMotivo:motivo, reagendaNota:'', reagendaFecha:'' });
+    const idx = data.findIndex(v=>v.id===String(selId));
+    if(idx>=0){ data[idx].estatus='cancelada'; data[idx].cancelMotivo=motivo; }
+    btn.disabled=false; btn.innerHTML='Confirmar cancelación';
+    closeOv('ov-cancel'); updateBadge(); renderHistorial();
+  } catch(e){ btn.disabled=false; btn.innerHTML='Confirmar cancelación'; alert('Error al guardar. Intenta de nuevo.'); }
+}
+
+function openReagenda(id){ selId=id; document.getElementById('reagenda-nota').value=''; document.getElementById('reagenda-fecha').value=todayStr; document.getElementById('ov-reagenda').classList.add('open'); }
+async function doReagenda(){
+  const nota = document.getElementById('reagenda-nota').value.trim()||'Reagendada';
+  const fecha = document.getElementById('reagenda-fecha').value;
+  const btn = document.getElementById('btn-reagenda-ok');
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span>Guardando...';
+  try {
+    const res = await postData({ action:'update', id:selId, estatus:'reagendada', cancelMotivo:'', reagendaNota:nota, reagendaFecha:fecha });
+    const idx = data.findIndex(v=>v.id===String(selId));
+    if(idx>=0){ data[idx].estatus='reagendada'; data[idx].reagendaNota=nota; data[idx].reagendaFecha=fecha; }
+    btn.disabled=false; btn.innerHTML='Confirmar reagenda';
+    closeOv('ov-reagenda'); updateBadge(); renderHistorial(); renderCancel();
+  } catch(e){ btn.disabled=false; btn.innerHTML='Confirmar reagenda'; alert('Error al guardar. Intenta de nuevo.'); }
+}
+
+function closeOv(id){ document.getElementById(id).classList.remove('open'); }
+
+function exportCSV(){
+  const cols=['fecha','vendedor','cliente','tel','servicio','ciudad','origen','precio','pago','estatus','cancelMotivo','reagendaNota','reagendaFecha'];
+  const rows=[cols.join(','),...data.map(v=>cols.map(c=>'"'+(v[c]||'')+'"').join(','))];
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(rows.join('\n'));
+  a.download='PCS_Casas_Ventas_'+todayStr+'.csv'; a.click();
+}
+
+function buildCtx(){
+  const act=data.filter(v=>v.estatus==='activa');
+  const hoy=act.filter(v=>v.fecha===todayStr);
+  const mesAct=act.filter(v=>v.fecha.startsWith(mes));
+  const sem=act.filter(v=>{ const d=new Date(v.fecha+'T12:00:00'); const s=new Date(today); s.setDate(today.getDate()-today.getDay()); return d>=s; });
+  const mesTodo=data.filter(v=>v.fecha.startsWith(mes));
+  const cancelMes=mesTodo.filter(v=>v.estatus==='cancelada');
+  const reagMes=mesTodo.filter(v=>v.reagendaNota&&v.reagendaNota.trim()!==''&&v.reagendaNota!=='undefined');
+  const iaMes=mesAct.filter(v=>v.esIA);
+  const xV={};
+  act.forEach(v=>{
+    if(!xV[v.vendedor])xV[v.vendedor]={total:0,cierres:0,hoy:0,mes:0,cierresMes:0,esIA:v.esIA||false};
+    xV[v.vendedor].total+=v.precio; xV[v.vendedor].cierres++;
+    if(v.fecha===todayStr)xV[v.vendedor].hoy+=v.precio;
+    if(v.fecha.startsWith(mes)){xV[v.vendedor].mes+=v.precio;xV[v.vendedor].cierresMes++;}
+  });
+  return{
+    fecha_hoy:todayStr, mes_actual:mes,
+    ventas:{hoy:hoy.reduce((s,v)=>s+v.precio,0),cierres_hoy:hoy.length,semana:sem.reduce((s,v)=>s+v.precio,0),mes_neto:mesAct.reduce((s,v)=>s+v.precio,0),cierres_mes:mesAct.length},
+    cancelaciones:{total_mes:cancelMes.length,tasa_pct:mesTodo.length>0?Math.round((cancelMes.length/mesTodo.length)*100):0,reagendas:reagMes.length,tasa_reagenda_pct:cancelMes.length>0?Math.round((reagMes.length/cancelMes.length)*100):0},
+    ventas_ia:{cierres_mes:iaMes.length,monto_mes:iaMes.reduce((s,v)=>s+v.precio,0),pct_del_total:mesAct.length>0?Math.round((iaMes.length/mesAct.length)*100):0},
+    por_vendedor:xV
+  };
+}
+
+function addMsg(txt,tipo){ const w=document.getElementById('chat'); const d=document.createElement('div'); d.className='msg msg-'+tipo; d.innerHTML=txt; w.appendChild(d); w.scrollTop=w.scrollHeight; }
+function addTyping(){ const w=document.getElementById('chat'); const d=document.createElement('div'); d.className='typing'; d.id='typing'; d.innerHTML='<div class="dot"></div><div class="dot"></div><div class="dot"></div>'; w.appendChild(d); w.scrollTop=w.scrollHeight; }
+function rmTyping(){ const t=document.getElementById('typing'); if(t)t.remove(); }
+function preg(txt){ document.getElementById('chat-input').value=txt; enviar(); }
+
+async function enviar(){
+  const inp=document.getElementById('chat-input'); const txt=inp.value.trim(); if(!txt)return;
+  inp.value=''; addMsg(txt,'user'); addTyping();
+  await loadData();
+  const ctx=buildCtx();
+  const prompt=`Eres el asistente de ventas de PCS Casas, empresa de fumigación en México. Tienes datos reales del equipo. Responde directo y conciso en español, máximo 5 líneas. Usa pesos mexicanos "$40,000". Si no hay datos dilo amablemente.\n\nDATOS:\n${JSON.stringify(ctx,null,2)}\n\nPregunta: ${txt}`;
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:350,messages:[{role:'user',content:prompt}]})});
+    const d=await res.json(); rmTyping();
+    addMsg(d.content?.find(b=>b.type==='text')?.text||'Sin respuesta.','bot');
+  }catch(e){ rmTyping(); addMsg('Error al conectar con el asistente.','bot'); }
+}
+
+loadData().then(()=>{ renderDash(); });
+addMsg('Hola, soy tu asistente de ventas PCS Casas. Mis datos se sincronizan con Google Sheets en tiempo real. Pregúntame lo que necesites.','bot');
+</script>
+</body>
+</html>
